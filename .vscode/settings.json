@@ -4,6 +4,7 @@
   },
   "eslint.validate": ["javascript", "javascriptreact", "vue"],
   "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "workbench.colorTheme": "codeSTACKr Theme",
   "eslint.format.enable": true,
   "eslint.alwaysShowStatus": true,
   "editor.formatOnSave": true,
