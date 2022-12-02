@@ -1,12 +1,13 @@
 <template>
   <div class="select">
-    <div class="select_wrapper">
-      <div class="select_wrapper__item" @click="addActiveItem(item)" v-for="(item, index) in state" :key="`select-item__${index}`">{{ item.label }}</div>
+    <div class="select_wrapper" ref="selectWrapper">
+      <div class="select_wrapper__item" @click="handleItems(item)" v-for="(item, index) in state" :key="`select-item__${index}`">{{ item.label }}</div>
     </div>
+    <div class="select_wrapper__item" @click="removeLastNotFitEl()" v-if="notFitSize > 0">+ {{ notFitSize }}</div>
     <img src="@/assets/svgs/arrow-right.svg" @click="toggleOptions" alt="" :style="getActiveStyle" class="select__icon" />
     <Transition name="slide-fade">
       <div class="options_wrapper" ref="optionsWrapper" v-if="optionsIsActive">
-        <div class="options_wrapper__item" @click="addActiveItem(item)" :style="getItemStyle(item)" v-for="(item, index) in options" :key="`options-item__${index}`">{{ item.label }}</div>
+        <div class="options_wrapper__item" @click="handleItems(item)" :style="getItemStyle(item)" v-for="(item, index) in options" :key="`options-item__${index}`">{{ item.label }}</div>
       </div>
     </Transition>
   </div>
@@ -22,8 +23,12 @@ const props = defineProps({
 });
 let optionsIsActive = ref(false);
 let state = ref([]);
+let notFit = ref([]);
 let optionsWrapper = ref();
-
+let selectWrapper = ref();
+let notFitSize = computed(() => {
+  return notFit.value.length;
+});
 onClickOutside(optionsWrapper, () => (optionsIsActive.value = false));
 
 const toggleOptions = () => {
@@ -32,16 +37,44 @@ const toggleOptions = () => {
 const getActiveStyle = computed(() => {
   return optionsIsActive.value ? "transform: rotate(-90deg)" : "transform: rotate(90deg)";
 });
-const addActiveItem = (item) => {
-  if (state.value.includes(item)) {
-    state.value.splice(state.value.indexOf(item), 1);
+
+const getItemStyle = (item) => {
+  if (notFit.value.includes(item) || state.value.includes(item)) {
+    return "background-color: #2d3041";
   } else {
-    state.value.push(item);
+    return "background-color: #252836";
   }
 };
 
-const getItemStyle = (item) => {
-  return state.value.includes(item) ? "background-color: #2d3041" : "background-color: #252836";
+const removeLastNotFitEl = () => {
+  notFit.value.pop();
+};
+
+const handleItems = (item) => {
+  let wrapperWidth = selectWrapper.value.clientWidth;
+  let childrensWidth = 0;
+  let minLenghtLabelItem = { label: "7298374982374932742347389479827497239473248239784239423948372948327493274923" };
+  for (let item of selectWrapper.value.children) {
+    childrensWidth += item.clientWidth;
+  }
+
+  if (state.value.includes(item) || notFit.value.includes(item)) {
+    if (state.value.includes(item)) {
+      state.value.splice(state.value.indexOf(item), 1);
+      if (notFit.value.length > 0) {
+        state.value.push(notFit.value[0]);
+        notFit.value.splice(0, 1);
+      }
+    } else {
+      notFit.value.splice(notFit.value.indexOf(item), 1);
+    }
+  } else {
+    if (childrensWidth + 160 < wrapperWidth) {
+      state.value.push(item);
+    } else {
+      notFit.value.push(item);
+    }
+  }
 };
 </script>
 
@@ -57,6 +90,7 @@ const getItemStyle = (item) => {
   padding: 0px 20px;
   justify-content: space-between;
   position: relative;
+  gap: 5px;
 
   &__icon {
     width: 20px;
@@ -71,6 +105,8 @@ const getItemStyle = (item) => {
     display: flex;
     width: 100%;
     height: 100%;
+    max-width: 80%;
+    overflow: hidden;
     flex-direction: row;
     gap: 5px;
     align-items: center;
@@ -81,9 +117,11 @@ const getItemStyle = (item) => {
       align-items: center;
       width: auto;
       height: 100%;
+      min-width: 55px;
       padding: 10px 16px;
       background: #232130;
       border-radius: 20px;
+      max-height: 33px;
       cursor: pointer;
       font-size: 16px;
     }
